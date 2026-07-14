@@ -115,6 +115,8 @@ function fmt(n) {
 
 const esc = (title) => title.replace(/&/g, "&&"); // "&" is an access-key marker
 
+const GRANT_ID = "calipers-grant";
+
 let buildInstance = 0;   // races: a fast second right-click supersedes the first
 let idCounter = 0;
 const payloads = new Map(); // menu item id → string to copy
@@ -187,7 +189,15 @@ async function rebuildMenu(info) {
   const pending = [];
   const parsed = parseSelection(info.selectionText);
 
-  if (!parsed) {
+  if (info.selectionText === undefined) {
+    // Firefox withholds selectionText from onShown without host permission
+    // for the page. permissions.request needs a user action — offer one.
+    pending.push(createItem({
+      id: GRANT_ID,
+      title: "Calipers — click to grant page access",
+      contexts: ["selection"],
+    }));
+  } else if (!parsed) {
     const snippet = (info.selectionText || "").trim().slice(0, 30);
     pending.push(createItem({
       id: `calipers-${++idCounter}`,
@@ -302,6 +312,15 @@ if (typeof browser !== "undefined") {
   });
 
   browser.menus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId === GRANT_ID) {
+      // Must run directly in the user-action handler.
+      browser.permissions.request({ origins: ["<all_urls>"] })
+        .then((granted) => {
+          if (!granted) console.warn("Calipers: page access declined — selections stay invisible");
+        })
+        .catch((e) => console.warn("Calipers: permission request failed:", e.message));
+      return;
+    }
     const payload = payloads.get(info.menuItemId);
     if (!payload || !tab || tab.id === undefined) return;
     try {

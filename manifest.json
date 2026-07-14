@@ -20,5 +20,6 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": ["menus", "scripting", "activeTab", "clipboardWrite"]
+  "permissions": ["menus", "scripting", "activeTab", "clipboardWrite"],
+  "host_permissions": ["<all_urls>"]
 }
