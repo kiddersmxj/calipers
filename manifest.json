@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Calipers",
   "version": "0.1.0",
-  "description": "Select a measurement, right-click: the context menu itself shows the conversions — every unit, plus circle geometry. Click a value to copy it.",
+  "description": "Select a measurement, right-click: the context menu itself shows the conversions, plus circle geometry for lengths. Click a value to copy it.",
   "author": "Maxamilian X J Kidd-May",
   "homepage_url": "https://github.com/kiddersmxj/calipers",
   "browser_specific_settings": {
@@ -20,6 +20,6 @@
   "background": {
     "scripts": ["background.js"]
   },
-  "permissions": ["menus", "scripting", "activeTab", "clipboardWrite"],
+  "permissions": ["menus", "scripting", "activeTab", "clipboardWrite", "storage"],
   "host_permissions": ["<all_urls>"]
 }

@@ -1,8 +1,9 @@
-/* Calipers — measurement conversions in the context menu.
+/* Calipers: measurement conversions in the context menu.
  * Copyright (c) 2026 Maxamilian X J Kidd-May. MIT licence.
  *
- * Everything normalises to millimetres. The menu is torn down and rebuilt
- * inside menus.onShown, then menus.refresh() paints it populated.
+ * Everything normalises to a base unit per dimension (millimetres for
+ * length). The menu is torn down and rebuilt inside menus.onShown, then
+ * menus.refresh() paints it populated.
  */
 
 "use strict";
@@ -10,46 +11,106 @@
 const DEFAULT_UNIT = "mm";
 
 /* ------------------------------------------------------------------ *
- * The unit table is the spine. Adding a unit is one row here plus an
- * entry in the order arrays — nothing else may need touching.
+ * The unit table is the spine. Adding a unit is one row: dimension,
+ * factor to the dimension's base unit, display label, area label for
+ * lengths, and every plausible spelling. Nothing else needs touching.
  * ------------------------------------------------------------------ */
 
-const UNITS = {
-  um:   { mm: 0.001,     label: "µm",   area: null  },
-  mm:   { mm: 1,         label: "mm",   area: "mm²" },
-  cm:   { mm: 10,        label: "cm",   area: "cm²" },
-  m:    { mm: 1000,      label: "m",    area: "m²"  },
-  km:   { mm: 1e6,       label: "km",   area: null  },
-  thou: { mm: 0.0254,    label: "thou", area: null  },
-  in:   { mm: 25.4,      label: "in",   area: "in²" },
-  ft:   { mm: 304.8,     label: "ft",   area: "ft²" },
-  yd:   { mm: 914.4,     label: "yd",   area: "yd²" },
-  mi:   { mm: 1609344,   label: "mi",   area: null  },
+const DIMS = {
+  length:      { name: "Length",      geometry: true },
+  capacitance: { name: "Capacitance" },
+  resistance:  { name: "Resistance" },
+  inductance:  { name: "Inductance" },
+  voltage:     { name: "Voltage" },
+  current:     { name: "Current" },
+  frequency:   { name: "Frequency" },
+  power:       { name: "Power" },
 };
 
-const LENGTH_ORDER = ["um", "mm", "cm", "m", "km", "thou", "in", "ft", "yd", "mi"];
-const AREA_ORDER = ["mm", "cm", "m", "in", "ft", "yd"];
+const UNITS = {
+  // length: factor is millimetres
+  um:   { dim: "length", factor: 0.001,   label: "µm",   area: null,  aliases: ["µm", "μm", "um", "UM", "micron", "microns", "micrometre", "micrometres", "micrometer", "micrometers"] },
+  mm:   { dim: "length", factor: 1,       label: "mm",   area: "mm²", aliases: ["mm", "MM", "millimetre", "millimetres", "millimeter", "millimeters"] },
+  cm:   { dim: "length", factor: 10,      label: "cm",   area: "cm²", aliases: ["cm", "CM", "centimetre", "centimetres", "centimeter", "centimeters"] },
+  m:    { dim: "length", factor: 1000,    label: "m",    area: "m²",  aliases: ["m", "metre", "metres", "meter", "meters"] },
+  km:   { dim: "length", factor: 1e6,     label: "km",   area: null,  aliases: ["km", "KM", "kilometre", "kilometres", "kilometer", "kilometers"] },
+  thou: { dim: "length", factor: 0.0254,  label: "thou", area: null,  aliases: ["thou", "thous", "mil", "mils"] },
+  in:   { dim: "length", factor: 25.4,    label: "in",   area: "in²", aliases: ["in", "IN", "inch", "inches", "\"", "″", "”"] },
+  ft:   { dim: "length", factor: 304.8,   label: "ft",   area: "ft²", aliases: ["ft", "FT", "foot", "feet", "'", "′", "’"] },
+  yd:   { dim: "length", factor: 914.4,   label: "yd",   area: "yd²", aliases: ["yd", "YD", "yds", "yard", "yards"] },
+  mi:   { dim: "length", factor: 1609344, label: "mi",   area: null,  aliases: ["mi", "MI", "mile", "miles"] },
+
+  // capacitance: factor is farads
+  pF:   { dim: "capacitance", factor: 1e-12, label: "pF", aliases: ["pF", "pf", "picofarad", "picofarads"] },
+  nF:   { dim: "capacitance", factor: 1e-9,  label: "nF", aliases: ["nF", "nf", "nanofarad", "nanofarads"] },
+  uF:   { dim: "capacitance", factor: 1e-6,  label: "µF", aliases: ["µF", "μF", "uF", "uf", "microfarad", "microfarads"] },
+  mF:   { dim: "capacitance", factor: 1e-3,  label: "mF", aliases: ["mF", "mf", "millifarad", "millifarads"] },
+  F:    { dim: "capacitance", factor: 1,     label: "F",  aliases: ["F", "farad", "farads"] },
+
+  // resistance: factor is ohms
+  mohm: { dim: "resistance", factor: 1e-3, label: "mΩ", aliases: ["mΩ", "milliohm", "milliohms"] },
+  ohm:  { dim: "resistance", factor: 1,    label: "Ω",  aliases: ["Ω", "R", "r", "ohm", "ohms"] },
+  kohm: { dim: "resistance", factor: 1e3,  label: "kΩ", aliases: ["kΩ", "KΩ", "kohm", "kohms", "kiloohm", "kilohm", "kilohms", "kiloohms"] },
+  Mohm: { dim: "resistance", factor: 1e6,  label: "MΩ", aliases: ["MΩ", "Mohm", "MOhm", "megohm", "megohms", "megaohm", "megaohms", "meg", "megs"] },
+
+  // inductance: factor is henries
+  nH:   { dim: "inductance", factor: 1e-9, label: "nH", aliases: ["nH", "nh", "nanohenry", "nanohenries"] },
+  uH:   { dim: "inductance", factor: 1e-6, label: "µH", aliases: ["µH", "μH", "uH", "uh", "microhenry", "microhenries"] },
+  mH:   { dim: "inductance", factor: 1e-3, label: "mH", aliases: ["mH", "mh", "millihenry", "millihenries"] },
+  H:    { dim: "inductance", factor: 1,    label: "H",  aliases: ["H", "henry", "henries", "henrys"] },
+
+  // voltage: factor is volts
+  uV:   { dim: "voltage", factor: 1e-6, label: "µV", aliases: ["µV", "μV", "uV", "uv", "microvolt", "microvolts"] },
+  mV:   { dim: "voltage", factor: 1e-3, label: "mV", aliases: ["mV", "mv", "millivolt", "millivolts"] },
+  V:    { dim: "voltage", factor: 1,    label: "V",  aliases: ["V", "v", "volt", "volts"] },
+  kV:   { dim: "voltage", factor: 1e3,  label: "kV", aliases: ["kV", "kv", "kilovolt", "kilovolts"] },
+
+  // current: factor is amps
+  uA:   { dim: "current", factor: 1e-6, label: "µA", aliases: ["µA", "μA", "uA", "ua", "microamp", "microamps", "microampere", "microamperes"] },
+  mA:   { dim: "current", factor: 1e-3, label: "mA", aliases: ["mA", "ma", "milliamp", "milliamps", "milliampere", "milliamperes"] },
+  A:    { dim: "current", factor: 1,    label: "A",  aliases: ["A", "amp", "amps", "ampere", "amperes"] },
+  kA:   { dim: "current", factor: 1e3,  label: "kA", aliases: ["kA", "kiloamp", "kiloamps"] },
+
+  // frequency: factor is hertz
+  Hz:   { dim: "frequency", factor: 1,   label: "Hz",  aliases: ["Hz", "hz", "hertz"] },
+  kHz:  { dim: "frequency", factor: 1e3, label: "kHz", aliases: ["kHz", "khz", "kilohertz"] },
+  MHz:  { dim: "frequency", factor: 1e6, label: "MHz", aliases: ["MHz", "mhz", "megahertz"] },
+  GHz:  { dim: "frequency", factor: 1e9, label: "GHz", aliases: ["GHz", "ghz", "gigahertz"] },
+
+  // power: factor is watts
+  mW:   { dim: "power", factor: 1e-3, label: "mW", aliases: ["mW", "mw", "milliwatt", "milliwatts"] },
+  W:    { dim: "power", factor: 1,    label: "W",  aliases: ["W", "w", "watt", "watts"] },
+  kW:   { dim: "power", factor: 1e3,  label: "kW", aliases: ["kW", "kw", "kilowatt", "kilowatts"] },
+  MW:   { dim: "power", factor: 1e6,  label: "MW", aliases: ["MW", "megawatt", "megawatts"] },
+};
+
+// Menu order per dimension follows the table's insertion order.
+function dimKeys(dim) {
+  return Object.keys(UNITS).filter((k) => UNITS[k].dim === dim);
+}
 
 /* ------------------------------------------------------------------ *
  * Parsing
  * ------------------------------------------------------------------ */
 
-const ALIASES = {
-  um:   ["µm", "μm", "um", "micron", "microns", "micrometre", "micrometres", "micrometer", "micrometers"],
-  mm:   ["mm", "millimetre", "millimetres", "millimeter", "millimeters"],
-  cm:   ["cm", "centimetre", "centimetres", "centimeter", "centimeters"],
-  m:    ["m", "metre", "metres", "meter", "meters"],
-  km:   ["km", "kilometre", "kilometres", "kilometer", "kilometers"],
-  thou: ["thou", "thous", "mil", "mils"],
-  in:   ["in", "inch", "inches", "\"", "″", "”"],
-  ft:   ["ft", "foot", "feet", "'", "′", "’"],
-  yd:   ["yd", "yds", "yard", "yards"],
-  mi:   ["mi", "mile", "miles"],
-};
+// Sloppy-case tolerance for word aliases (metres, Ohms, KILOHERTZ) without
+// breaking case-sensitive symbols (mW vs MW, mΩ vs MΩ).
+function caseVariants(aliases) {
+  const out = new Set(aliases);
+  for (const a of aliases) {
+    if (/^[a-z]{3,}$/.test(a)) {
+      out.add(a.toUpperCase());
+      out.add(a[0].toUpperCase() + a.slice(1));
+    }
+  }
+  return [...out];
+}
 
 const ALIAS_TO_KEY = new Map();
-for (const [key, list] of Object.entries(ALIASES)) {
-  for (const alias of list) ALIAS_TO_KEY.set(alias, key);
+for (const [key, unit] of Object.entries(UNITS)) {
+  for (const alias of caseVariants(unit.aliases)) {
+    if (!ALIAS_TO_KEY.has(alias)) ALIAS_TO_KEY.set(alias, key);
+  }
 }
 
 const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -66,15 +127,27 @@ const NUM_RE = "[+-]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?";
 const FRACTION_RE = new RegExp(`^(?:(\\d+)\\s+)?(\\d+)\\s*/\\s*(\\d+)\\s*${UNIT_RE}$`);
 const DECIMAL_RE = new RegExp(`^(${NUM_RE})\\s*${UNIT_RE}$`);
 
-function parseSelection(raw) {
+// Component shorthand: 4k7 is 4.7 kΩ, 4u7 is 4.7 µF, 4R7 is 4.7 Ω.
+const SHORTHAND_RE = /^(\d+)\s*(p|n|u|µ|μ|r|R|k|K|M)\s*(\d+)$/;
+const SHORTHAND_UNIT = {
+  p: "pF", n: "nF", u: "uF", "µ": "uF", "μ": "uF",
+  r: "ohm", R: "ohm", k: "kohm", K: "kohm", M: "Mohm",
+};
+
+function parseSelection(raw, assumeKey = DEFAULT_UNIT) {
   if (!raw) return null;
-  let text = raw.replace(/ /g, " ").trim().toLowerCase();
+  let text = raw.replace(/ /g, " ").trim();
   text = text.replace(/(\d),(?=\d{3}(\D|$))/g, "$1"); // thousands separators
 
   let value;
   let alias;
-  let m = FRACTION_RE.exec(text);
+  let unit;
+  let m = SHORTHAND_RE.exec(text);
   if (m) {
+    value = parseFloat(`${m[1]}.${m[3]}`);
+    unit = SHORTHAND_UNIT[m[2]];
+    alias = m[2];
+  } else if ((m = FRACTION_RE.exec(text))) {
     const denominator = parseInt(m[3], 10);
     if (!denominator) return null;
     value = (m[1] ? parseInt(m[1], 10) : 0) + parseInt(m[2], 10) / denominator;
@@ -87,8 +160,15 @@ function parseSelection(raw) {
   }
 
   if (!Number.isFinite(value)) return null;
-  const unit = alias ? ALIAS_TO_KEY.get(alias) : DEFAULT_UNIT;
-  return { value, unit, assumed: !alias, mm: value * UNITS[unit].mm };
+  if (!unit) unit = alias ? ALIAS_TO_KEY.get(alias) : assumeKey;
+  if (!UNITS[unit]) return null;
+  return {
+    value,
+    unit,
+    dim: UNITS[unit].dim,
+    assumed: !alias,
+    base: value * UNITS[unit].factor,
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -109,13 +189,21 @@ function fmt(n) {
   return s;
 }
 
+// A conversion is worth front-page space when the number stays readable.
+// The rest (8 mm in miles, 100 nF in farads) goes under "More units".
+function sensible(v) {
+  const abs = Math.abs(v);
+  return v === 0 || (abs >= 0.001 && abs < 1e6);
+}
+
 /* ------------------------------------------------------------------ *
  * Menu construction
  * ------------------------------------------------------------------ */
 
-const esc = (title) => title.replace(/&/g, "&&"); // "&" is an access-key marker
-
 const GRANT_ID = "calipers-grant";
+const ASSUME_PREFIX = "calipers-assume-";
+
+const esc = (title) => title.replace(/&/g, "&&"); // "&" is an access-key marker
 
 let buildInstance = 0;   // races: a fast second right-click supersedes the first
 let idCounter = 0;
@@ -131,44 +219,30 @@ function createItem(props) {
   });
 }
 
-function lengthTitle(mm, unitKey) {
-  return `${fmt(mm / UNITS[unitKey].mm)} ${UNITS[unitKey].label}`;
+function unitTitle(base, key) {
+  return `${fmt(base / UNITS[key].factor)} ${UNITS[key].label}`;
 }
 
-function areaTitle(mm2, unitKey) {
-  const factor = UNITS[unitKey].mm;
-  return `${fmt(mm2 / (factor * factor))} ${UNITS[unitKey].area}`;
+function areaTitleFor(baseArea, key) {
+  const f = UNITS[key].factor;
+  return `${fmt(baseArea / (f * f))} ${UNITS[key].area}`;
 }
 
 function addLeaf(pending, parentId, title) {
   const id = `calipers-${++idCounter}`;
   payloads.set(id, title);
-  pending.push(createItem({
-    id,
-    parentId,
-    title: esc(title),
-    contexts: ["selection"],
-  }));
+  const props = { id, title: esc(title), contexts: ["selection"] };
+  if (parentId !== undefined) props.parentId = parentId;
+  pending.push(createItem(props));
   return id;
 }
 
-// A submenu whose own title carries the headline figure in the source unit;
-// its children restate it across all units (source included — the headline
-// itself is not clickable).
-function addGeometrySubmenu(pending, rootId, caption, mmValue, sourceUnit, isArea) {
-  const order = isArea ? AREA_ORDER : LENGTH_ORDER;
-  const headlineUnit = isArea && !UNITS[sourceUnit].area ? "mm" : sourceUnit;
-  const headline = isArea ? areaTitle(mmValue, headlineUnit) : lengthTitle(mmValue, headlineUnit);
-  const subId = `calipers-${++idCounter}`;
-  pending.push(createItem({
-    id: subId,
-    parentId: rootId,
-    title: esc(`${caption} — ${headline}`),
-    contexts: ["selection"],
-  }));
-  for (const unitKey of order) {
-    addLeaf(pending, subId, isArea ? areaTitle(mmValue, unitKey) : lengthTitle(mmValue, unitKey));
-  }
+function addSubmenu(pending, parentId, title) {
+  const id = `calipers-${++idCounter}`;
+  const props = { id, title: esc(title), contexts: ["selection"] };
+  if (parentId !== undefined) props.parentId = parentId;
+  pending.push(createItem(props));
+  return id;
 }
 
 function addSeparator(pending, parentId) {
@@ -180,58 +254,124 @@ function addSeparator(pending, parentId) {
   }));
 }
 
+// Flat conversions with the unreadable ones tucked into "More units".
+function addConversions(pending, parentId, base, dim, sourceUnit) {
+  const main = [];
+  const esoteric = [];
+  for (const key of dimKeys(dim)) {
+    if (key === sourceUnit) continue;
+    (sensible(base / UNITS[key].factor) ? main : esoteric).push(key);
+  }
+  if (main.length === 0) {
+    main.push(...esoteric);
+    esoteric.length = 0;
+  }
+  for (const key of main) addLeaf(pending, parentId, unitTitle(base, key));
+  if (esoteric.length) {
+    const moreId = addSubmenu(pending, parentId, "More units");
+    for (const key of esoteric) addLeaf(pending, moreId, unitTitle(base, key));
+  }
+}
+
+// A submenu whose own title carries the headline figure in the source unit;
+// its children restate it across the readable units (source included, since
+// the headline itself is not clickable).
+function addGeometrySubmenu(pending, rootId, caption, baseValue, sourceUnit, isArea) {
+  const headlineUnit = isArea && !UNITS[sourceUnit].area ? "mm" : sourceUnit;
+  const headline = isArea
+    ? areaTitleFor(baseValue, headlineUnit)
+    : unitTitle(baseValue, headlineUnit);
+  const subId = addSubmenu(pending, rootId, `${caption}: ${headline}`);
+  for (const key of dimKeys("length")) {
+    if (isArea && !UNITS[key].area) continue;
+    const v = isArea
+      ? baseValue / (UNITS[key].factor * UNITS[key].factor)
+      : baseValue / UNITS[key].factor;
+    if (key !== headlineUnit && !sensible(v)) continue;
+    addLeaf(pending, subId, isArea ? areaTitleFor(baseValue, key) : unitTitle(baseValue, key));
+  }
+}
+
+function addAssumeSubmenu(pending, rootId, currentKey) {
+  const assumeId = addSubmenu(pending, rootId, "Assume unit");
+  for (const [dim, meta] of Object.entries(DIMS)) {
+    const dimId = addSubmenu(pending, assumeId, meta.name);
+    for (const key of dimKeys(dim)) {
+      pending.push(createItem({
+        id: `${ASSUME_PREFIX}${key}`,
+        parentId: dimId,
+        title: esc(`${key === currentKey ? "✓ " : ""}${UNITS[key].label}`),
+        contexts: ["selection"],
+      }));
+    }
+  }
+}
+
 async function rebuildMenu(info) {
   const instance = ++buildInstance;
+
+  let assumeUnit = DEFAULT_UNIT;
+  try {
+    const stored = await browser.storage.local.get("assumeUnit");
+    if (stored.assumeUnit && UNITS[stored.assumeUnit]) assumeUnit = stored.assumeUnit;
+  } catch (e) {
+    console.warn("Calipers: storage read failed:", e.message);
+  }
+  if (instance !== buildInstance) return;
+
   await browser.menus.removeAll();
   if (instance !== buildInstance) return;
   payloads.clear();
 
   const pending = [];
-  const parsed = parseSelection(info.selectionText);
+  const parsed = parseSelection(info.selectionText, assumeUnit);
 
   if (info.selectionText === undefined) {
     // Firefox withholds selectionText from onShown without host permission
-    // for the page. permissions.request needs a user action — offer one.
+    // for the page. permissions.request needs a user action, so offer one.
     pending.push(createItem({
       id: GRANT_ID,
-      title: "Calipers — click to grant page access",
+      title: "Calipers: grant page access",
       contexts: ["selection"],
     }));
   } else if (!parsed) {
     const snippet = (info.selectionText || "").trim().slice(0, 30);
     pending.push(createItem({
       id: `calipers-${++idCounter}`,
-      title: esc(`Calipers — “${snippet}” is not a measurement`),
+      title: esc(`Calipers: "${snippet}" is not a measurement`),
       contexts: ["selection"],
       enabled: false,
     }));
   } else {
-    const { value, unit, assumed, mm } = parsed;
-    const rootId = `calipers-${++idCounter}`;
-    pending.push(createItem({
-      id: rootId,
-      title: esc(`Calipers — ${fmt(value)} ${UNITS[unit].label}${assumed ? " (assumed)" : ""}`),
-      contexts: ["selection"],
-    }));
+    const { value, unit, dim, assumed, base } = parsed;
+    const rootId = addSubmenu(
+      pending,
+      undefined,
+      `Calipers: ${fmt(value)} ${UNITS[unit].label}${assumed ? " (assumed)" : ""}`
+    );
 
-    // Flat children: every length unit bar the source unit.
-    for (const unitKey of LENGTH_ORDER) {
-      if (unitKey !== unit) addLeaf(pending, rootId, lengthTitle(mm, unitKey));
+    addConversions(pending, rootId, base, dim, unit);
+
+    if (DIMS[dim].geometry) {
+      addSeparator(pending, rootId);
+
+      // Value read as a diameter.
+      addGeometrySubmenu(pending, rootId, "Ø circumference", Math.PI * base, unit, false);
+      addGeometrySubmenu(pending, rootId, "Ø radius", base / 2, unit, false);
+      addGeometrySubmenu(pending, rootId, "Ø area", (Math.PI * base * base) / 4, unit, true);
+
+      addSeparator(pending, rootId);
+
+      // Value read as a circumference.
+      addGeometrySubmenu(pending, rootId, "C diameter", base / Math.PI, unit, false);
+      addGeometrySubmenu(pending, rootId, "C radius", base / (2 * Math.PI), unit, false);
+      addGeometrySubmenu(pending, rootId, "C area", (base * base) / (4 * Math.PI), unit, true);
     }
 
-    addSeparator(pending, rootId);
-
-    // Value read as a diameter.
-    addGeometrySubmenu(pending, rootId, "Ø circumference", Math.PI * mm, unit, false);
-    addGeometrySubmenu(pending, rootId, "Ø radius", mm / 2, unit, false);
-    addGeometrySubmenu(pending, rootId, "Ø area", (Math.PI * mm * mm) / 4, unit, true);
-
-    addSeparator(pending, rootId);
-
-    // Value read as a circumference.
-    addGeometrySubmenu(pending, rootId, "C diameter", mm / Math.PI, unit, false);
-    addGeometrySubmenu(pending, rootId, "C radius", mm / (2 * Math.PI), unit, false);
-    addGeometrySubmenu(pending, rootId, "C area", (mm * mm) / (4 * Math.PI), unit, true);
+    if (assumed) {
+      addSeparator(pending, rootId);
+      addAssumeSubmenu(pending, rootId, assumeUnit);
+    }
   }
 
   await Promise.all(pending);
@@ -240,8 +380,8 @@ async function rebuildMenu(info) {
 }
 
 /* ------------------------------------------------------------------ *
- * Clipboard: injected into the originating frame. Must save and restore
- * the selection, and toast the copied text.
+ * Page injections. Each function must be self-contained: it is
+ * serialised into the originating frame.
  * ------------------------------------------------------------------ */
 
 function copyInPage(text) {
@@ -284,6 +424,30 @@ function copyInPage(text) {
   }, 1400);
 }
 
+function toastInPage(text) {
+  const toast = document.createElement("div");
+  toast.textContent = text;
+  toast.style.cssText =
+    "position:fixed;bottom:16px;right:16px;z-index:2147483647;" +
+    "background:#222;color:#fff;padding:6px 12px;border-radius:6px;" +
+    "font:13px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4);" +
+    "pointer-events:none;opacity:0;transition:opacity .15s";
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => { toast.style.opacity = "1"; });
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 200);
+  }, 1400);
+}
+
+function inject(tab, info, func, arg) {
+  return browser.scripting.executeScript({
+    target: { tabId: tab.id, frameIds: [info.frameId ?? 0] },
+    func,
+    args: [arg],
+  });
+}
+
 /* ------------------------------------------------------------------ *
  * Wiring
  * ------------------------------------------------------------------ */
@@ -316,19 +480,30 @@ if (typeof browser !== "undefined") {
       // Must run directly in the user-action handler.
       browser.permissions.request({ origins: ["<all_urls>"] })
         .then((granted) => {
-          if (!granted) console.warn("Calipers: page access declined — selections stay invisible");
+          if (!granted) console.warn("Calipers: page access declined, selections stay invisible");
         })
         .catch((e) => console.warn("Calipers: permission request failed:", e.message));
       return;
     }
+
+    if (typeof info.menuItemId === "string" && info.menuItemId.startsWith(ASSUME_PREFIX)) {
+      const key = info.menuItemId.slice(ASSUME_PREFIX.length);
+      if (!UNITS[key]) return;
+      try {
+        await browser.storage.local.set({ assumeUnit: key });
+        if (tab && tab.id !== undefined) {
+          await inject(tab, info, toastInPage, `Calipers: bare numbers now read as ${UNITS[key].label}`);
+        }
+      } catch (e) {
+        console.warn("Calipers: could not set assumed unit:", e.message);
+      }
+      return;
+    }
+
     const payload = payloads.get(info.menuItemId);
     if (!payload || !tab || tab.id === undefined) return;
     try {
-      await browser.scripting.executeScript({
-        target: { tabId: tab.id, frameIds: [info.frameId ?? 0] },
-        func: copyInPage,
-        args: [payload],
-      });
+      await inject(tab, info, copyInPage, payload);
     } catch (e) {
       // Privileged pages (about:*, AMO, view-source:) refuse injection.
       console.warn(`Calipers: cannot copy on this page: ${e.message}`);
@@ -342,5 +517,5 @@ if (typeof browser !== "undefined") {
 
 // Test hook: lets the parser and formatter run under node.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { parseSelection, fmt, UNITS, LENGTH_ORDER, AREA_ORDER };
+  module.exports = { parseSelection, fmt, sensible, UNITS, DIMS, dimKeys };
 }

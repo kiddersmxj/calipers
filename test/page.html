@@ -7,14 +7,30 @@
 </style>
 <h1>Calipers acceptance checks</h1>
 <p>Select each value, right-click, compare against the expectation.</p>
+<h2>Lengths</h2>
 <ol>
-  <li><code>8mm</code> — root reads “Calipers — 8 mm”; children include 0.314961 in and 314.961 thou.</li>
-  <li><code>3 inch</code> — “Ø circumference” submenu title carries 9.42478 in.</li>
-  <li><code>1 1/2"</code> — parsed as 1.5 in.</li>
-  <li><code>42</code> — root reads “… (assumed)”.</li>
-  <li><code>hello</code> — single disabled item, no submenu.</li>
-  <li><code>1,000 mm</code> — thousands separator handled; 1 m among children.</li>
-  <li><code>8 minutes</code> — must NOT parse as 8 metres (disabled item).</li>
-  <li>Click any leaf — clipboard holds exactly the label text, this selection survives, a toast appears bottom-right.</li>
-  <li>Right-click twice in rapid succession — no stale or duplicated menu.</li>
+  <li><code>8mm</code>: root reads "Calipers: 8 mm"; children include 0.314961 in and 314.961 thou; km and mi live under "More units".</li>
+  <li><code>3 inch</code>: the "Ø circumference" submenu title carries 9.42478 in.</li>
+  <li><code>1 1/2"</code>: parsed as 1.5 in.</li>
+  <li><code>42</code>: root reads "(assumed)"; an "Assume unit" submenu appears at the bottom.</li>
+  <li><code>hello</code>: single disabled item, no submenu.</li>
+  <li><code>1,000 mm</code>: thousands separator handled; 1 m among children.</li>
+  <li><code>8 minutes</code>: must NOT parse as 8 metres (disabled item).</li>
+</ol>
+<h2>Electronics</h2>
+<ol>
+  <li><code>100nF</code>: children include 0.1 µF and 100000 pF; F under "More units"; no circle geometry.</li>
+  <li><code>4k7</code>: parsed as 4.7 kΩ; children include 4700 Ω.</li>
+  <li><code>10 kohm</code>: same as 10 kΩ.</li>
+  <li><code>2.2mH</code>, <code>16 MHz</code>, <code>3.3v</code>, <code>20mA</code>, <code>250mW</code>: each parsed in its own dimension.</li>
+</ol>
+<h2>Assumed units</h2>
+<ol>
+  <li>Select <code>42</code>, open "Assume unit", pick Capacitance then µF. A toast confirms. Right-click <code>42</code> again: root now reads "Calipers: 42 µF (assumed)".</li>
+  <li>Switch it back to Length, mm, the same way.</li>
+</ol>
+<h2>General</h2>
+<ol>
+  <li>Click any leaf: clipboard holds exactly the label text, this selection survives, a toast appears bottom-right.</li>
+  <li>Right-click twice in rapid succession: no stale or duplicated menu.</li>
 </ol>
