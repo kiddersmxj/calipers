@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Calipers acceptance page</title>
+<style>
+  body { font: 18px/2.2 system-ui, sans-serif; max-width: 40em; margin: 3em auto; }
+  code { background: #eee; padding: 2px 8px; border-radius: 4px; }
+</style>
+<h1>Calipers acceptance checks</h1>
+<p>Select each value, right-click, compare against the expectation.</p>
+<ol>
+  <li><code>8mm</code> — root reads “Calipers — 8 mm”; children include 0.314961 in and 314.961 thou.</li>
+  <li><code>3 inch</code> — “Ø circumference” submenu title carries 9.42478 in.</li>
+  <li><code>1 1/2"</code> — parsed as 1.5 in.</li>
+  <li><code>42</code> — root reads “… (assumed)”.</li>
+  <li><code>hello</code> — single disabled item, no submenu.</li>
+  <li><code>1,000 mm</code> — thousands separator handled; 1 m among children.</li>
+  <li><code>8 minutes</code> — must NOT parse as 8 metres (disabled item).</li>
+  <li>Click any leaf — clipboard holds exactly the label text, this selection survives, a toast appears bottom-right.</li>
+  <li>Right-click twice in rapid succession — no stale or duplicated menu.</li>
+</ol>
