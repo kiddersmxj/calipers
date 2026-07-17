@@ -24,6 +24,9 @@ Firefox-only by design: it leans on `menus.onShown` plus `menus.refresh()`,
 which Chromium lacks, to rebuild the menu in the instant between the
 right-click and the menu painting.
 
+Full documentation lives in [docs/](docs/): [architecture](docs/architecture.md),
+[adding units](docs/adding-units.md), [releasing](docs/release.md).
+
 ## Develop
 
 ```bash

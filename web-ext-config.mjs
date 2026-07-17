@@ -1,3 +1,3 @@
 export default {
-  ignoreFiles: ["test", "web-ext-config.mjs", "README.md", "LICENSE"],
+  ignoreFiles: ["test", "docs", "web-ext-config.mjs", "README.md", "LICENSE"],
 };
