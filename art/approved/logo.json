@@ -1,0 +1,33 @@
+{
+  "id": "logo-001",
+  "state": "approved",
+  "image": "approved/logo.png",
+  "slug": "logo",
+  "created": "2026-11-20T17:56:46+00:00",
+  "request": "App icon seen small, 64px on a grid: a pair of vernier calipers with the jaws open, drawn as a flat line icon in steel grey strokes, on a Firefox orange rounded-square background. The calipers sit diagonally or horizontally, centred, simple enough to read at 64px: main beam, sliding jaw, two open jaws, a few tick marks on the beam.",
+  "prompt": "Create an image.\n\nArtwork for Calipers: Personal Firefox add-on: select a measurement on a page, right-click, and the context menu shows the unit conversions. For Max's own use.\n\nStyle: Flat line icons: one simple tool drawn in even-weight strokes on a solid colour, no gradients, no shading, no texture.\n\nRules:\n- Uniform stroke weight throughout\n- Subject centred with generous margin, readable at 64px\n- Rounded-square tile filled edge to edge with the background colour\n\nAvoid: text or numbers; the Firefox logo or any browser logo; gradients; drop shadows; 3D rendering; photorealism.\n\nPalette (use these colours): firefox_orange #FF7139, steel_grey #5B6670.\n\nRequest: App icon seen small, 64px on a grid: a pair of vernier calipers with the jaws open, drawn as a flat line icon in steel grey strokes, on a Firefox orange rounded-square background. The calipers sit diagonally or horizontally, centred, simple enough to read at 64px: main beam, sliding jaw, two open jaws, a few tick marks on the beam.\n\nMake it square (1:1). Reply with the image only.",
+  "provider": "chatgpt",
+  "model": "chatgpt",
+  "params": {
+    "size": "1K",
+    "aspect": "1:1",
+    "quality": "medium",
+    "transparent": false
+  },
+  "refs": [],
+  "parent": null,
+  "cost_usd": 0.0,
+  "model_text": null,
+  "chat": "https://chatgpt.com/c/6b0089b6-8bf0-83ed-b45e-c2071802f36e",
+  "jobs": [
+    "j_8f2d7fe164ed0f6c"
+  ],
+  "by": "kidders@mxj-arch-2",
+  "asset": "logo",
+  "approved": {
+    "at": "2026-11-20T17:56:53+00:00",
+    "by": "kidders@mxj-arch-2 (no terminal)",
+    "placed": [],
+    "note": null
+  }
+}

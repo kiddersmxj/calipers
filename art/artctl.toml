@@ -1,0 +1,42 @@
+# artctl brand kit. See SPEC.md in the artctl repo for every field.
+name = "Calipers"
+# One line: what the product is and who it is for. Sent with every request.
+description = "Personal Firefox add-on: select a measurement on a page, right-click, and the context menu shows the unit conversions. For Max's own use."
+
+[style]
+# How everything should look, in a sentence or two.
+summary = "Flat line icons: one simple tool drawn in even-weight strokes on a solid colour, no gradients, no shading, no texture."
+# Hard rules the model must follow.
+rules = ["Uniform stroke weight throughout", "Subject centred with generous margin, readable at 64px", "Rounded-square tile filled edge to edge with the background colour"]
+# Things that must never appear.
+avoid = ["text or numbers", "the Firefox logo or any browser logo", "gradients", "drop shadows", "3D rendering", "photorealism"]
+
+[palette]
+# name = "#RRGGBB"
+firefox_orange = "#FF7139"
+steel_grey = "#5B6670"
+
+[generate]
+provider = "chatgpt"  # chatgpt (free, via headfull), gemini, openai (paid APIs), mock (offline)
+# chatgpt takes up to 10 images per request (refs plus any --from image).
+size = "1K"           # gemini: 512, 1K, 2K, 4K. openai: 1K, or WxH
+aspect = "1:1"
+quality = "medium"    # openai only: low, medium, high
+
+[chatgpt]
+# ChatGPT project URL for this brand. Every image is made in a chat inside it,
+# so the brand's work stays together and out of the main ChatGPT history.
+# "none" for a one-off with no project; left empty, gen warns.
+project = "none"
+
+[budget]
+per_call_usd = 1.00
+daily_usd = 5.00
+
+[review]
+# agent: anyone may approve. human: approval needs a person at a terminal or
+# a click on the review page.
+mode = "agent"
+
+# Reference images. always = true attaches it to every generation.
+# role is one of: logo, mascot, example, reference.
