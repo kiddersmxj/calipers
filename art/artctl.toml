@@ -5,11 +5,11 @@ description = "Personal Firefox add-on: select a measurement on a page, right-cl
 
 [style]
 # How everything should look, in a sentence or two.
-summary = "Flat line icons: one simple tool drawn in even-weight strokes on a solid colour, no gradients, no shading, no texture."
+summary = "Bold app icons: one striking subject that fills the frame, with rich light and depth (glow, soft shading, gradients), on a full-bleed rounded square, in the manner of the example refs."
 # Hard rules the model must follow.
-rules = ["Uniform stroke weight throughout", "Subject centred with generous margin, readable at 64px", "Rounded-square tile filled edge to edge with the background colour"]
+rules = ["One bold subject that fills the frame", "Rich light and depth: glow, soft shading, gradients", "Strong silhouette that reads at 64px", "Full-bleed rounded square"]
 # Things that must never appear.
-avoid = ["text or numbers", "the Firefox logo or any browser logo", "gradients", "drop shadows", "3D rendering", "photorealism"]
+avoid = ["line art", "thin outlines", "diagram-like combinations of objects", "text or numbers", "the Firefox logo or any browser logo", "photorealism"]
 
 [palette]
 # name = "#RRGGBB"
@@ -40,3 +40,39 @@ mode = "agent"
 
 # Reference images. always = true attaches it to every generation.
 # role is one of: logo, mascot, example, reference.
+
+[[refs]]
+path = "refs/liked-blinder.png"
+role = "example"
+note = "An approved logo from another of Max's projects that he liked; match its quality and depth, not its subject."
+always = false
+
+[[refs]]
+path = "refs/liked-ccorral.png"
+role = "example"
+note = "An approved logo from another of Max's projects that he liked; match its quality and depth, not its subject."
+always = false
+
+[[refs]]
+path = "refs/liked-qotd.png"
+role = "example"
+note = "An approved logo from another of Max's projects that he liked; match its quality and depth, not its subject."
+always = false
+
+[[refs]]
+path = "refs/liked-engram.png"
+role = "example"
+note = "An approved logo from another of Max's projects that he liked; match its quality and depth, not its subject."
+always = false
+
+[[refs]]
+path = "refs/liked-carvcontrol.png"
+role = "example"
+note = "An approved logo from another of Max's projects that he liked; match its quality and depth, not its subject."
+always = false
+
+[[refs]]
+path = "refs/liked-logos.png"
+role = "example"
+note = "A sheet of approved logos from Max's other projects that he liked; match their quality and depth, not their subjects."
+always = true
